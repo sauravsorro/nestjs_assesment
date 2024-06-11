@@ -13,29 +13,16 @@ export class DashboardService {
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
   ) {}
 
-  async getSchoolCount(res: Response) {
+  async getSchoolStudentCount(res: Response) {
     try {
-      const count = await this.schoolModel.countDocuments().exec();
+      const [countSchool, countStudent] = await Promise.all([
+        this.schoolModel.countDocuments().exec(),
+        this.studentModel.countDocuments().exec(),
+      ]);
       return res.status(HttpStatus.OK).send({
         statusCode: HttpStatus.OK,
-        message: 'School Count get successfully',
-        data: { schoolCount: count },
-      });
-    } catch (error) {
-      throw CustomError.customException(
-        error.response.message ? error.response.message : error.response,
-        error.response.statusCode ? error.response.statusCode : error.status,
-      );
-    }
-  }
-
-  async getStudentCount(res: Response) {
-    try {
-      const count = await this.studentModel.countDocuments().exec();
-      return res.status(HttpStatus.OK).send({
-        statusCode: HttpStatus.OK,
-        message: 'Student Count get successfully',
-        data: { studentCount: count },
+        message: 'Count get successfully',
+        data: { schoolCount: countSchool, studentCount: countStudent },
       });
     } catch (error) {
       throw CustomError.customException(
