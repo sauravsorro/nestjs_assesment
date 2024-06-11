@@ -11,6 +11,8 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { LoginUserDto } from './dto/user.dto';
 import { Response } from 'express';
+import 'dotenv/config';
+import { CustomError } from 'src/common/expections';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -32,7 +34,6 @@ export class AuthService implements OnModuleInit {
       const newAdmin = new this.userModel({
         email: 'admin@yopmail.com',
         password: hashedPassword,
-        role: 'admin',
       });
       await newAdmin.save();
     }
@@ -42,7 +43,6 @@ export class AuthService implements OnModuleInit {
     try {
       const findAdminEmailExit = await this.userModel.findOne({
         email: loginUserDto.email.toLowerCase(),
-        role: loginUserDto.role,
       });
       if (!findAdminEmailExit) {
         throw new HttpException('Email does not exist', HttpStatus.NOT_FOUND);
@@ -56,11 +56,10 @@ export class AuthService implements OnModuleInit {
       const tokenPayload = {
         _id: findAdminEmailExit._id,
         email: findAdminEmailExit.email,
-        role: findAdminEmailExit.role,
       };
 
       const authToken = await this.jwtService.sign(tokenPayload, {
-        secret: 'secret_key',
+        secret: process.env.JWT_SECRET,
         expiresIn: '10d',
       });
       return res.status(HttpStatus.OK).send({
@@ -71,7 +70,10 @@ export class AuthService implements OnModuleInit {
         },
       });
     } catch (error) {
-      throw new HttpException(error.response, error.status);
+      throw CustomError.customException(
+        error.response.message ? error.response.message : error.response,
+        error.response.statusCode ? error.response.statusCode : error.status,
+      );
     }
   }
 }

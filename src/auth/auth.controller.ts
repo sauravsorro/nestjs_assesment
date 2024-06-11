@@ -5,13 +5,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Public } from './auth.decorator';
 
-@Controller('auth')
 @ApiTags('Auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
   @Public()
+  @Post('login')
   login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
     return this.authService.login(loginUserDto, res);
   }

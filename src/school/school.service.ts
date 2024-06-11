@@ -8,8 +8,9 @@ import { CreateSchoolDto, UpdateSchoolDto } from './dto/school.dto';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
-import { idInvalid } from 'src/utils/constants';
+import { generatePassword, idInvalid } from 'src/utils/constants';
 import * as fs from 'fs';
+import { CustomError } from 'src/common/expections';
 
 @Injectable()
 export class SchoolService {
@@ -30,37 +31,34 @@ export class SchoolService {
     }
   }
 
-  async generatePassword(length: number = 8) {
-    const charset =
-      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let password = '';
-    for (let i = 0; i < length; ++i) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
-      password += charset[randomIndex];
-    }
-    return password;
-  }
-
   async create(body: CreateSchoolDto, res: Response) {
     try {
       const emailExist = await this.schoolModel.findOne({
         email: body.email.toLowerCase(),
       });
       if (emailExist) {
-        throw new HttpException('Email already exist', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'School Email already exist',
+          HttpStatus.BAD_REQUEST,
+        );
       }
-      const password = await this.generatePassword();
+      const password = await generatePassword();
       const hashedPassword = await bcrypt.hash(password, 10);
       const createdSchool = await this.schoolModel.create({
         ...body,
         email: body.email.toLowerCase(),
         password: hashedPassword,
       });
+      const responseSchool = createdSchool.toObject();
+      delete responseSchool.password;
+
+      //send password to email
       this.sendPasswordEmail(body.email, password);
+
       return res.status(HttpStatus.CREATED).send({
         statusCode: HttpStatus.CREATED,
         message: 'School Created Successfully and password sent to email',
-        data: createdSchool,
+        data: responseSchool,
       });
     } catch (error) {
       if (error) {
@@ -73,7 +71,10 @@ export class SchoolService {
           }
         });
       }
-      throw new HttpException(error.response, error.status);
+      throw CustomError.customException(
+        error.response.message ? error.response.message : error.response,
+        error.response.statusCode ? error.response.statusCode : error.status,
+      );
     }
   }
 
@@ -108,15 +109,16 @@ export class SchoolService {
         sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
       }
 
-      const schoolList = await this.schoolModel
-        .find(query)
-        .skip(skip)
-        .limit(limit)
-        .sort(sortOptions)
-        .select('-password')
-        .exec();
-
-      const totalCount = await this.schoolModel.countDocuments(query).exec();
+      const [schoolList, totalCount] = await Promise.all([
+        this.schoolModel
+          .find(query)
+          .skip(skip)
+          .limit(limit)
+          .sort(sortOptions)
+          .select('-password')
+          .exec(),
+        this.schoolModel.countDocuments(query).exec(),
+      ]);
 
       return res.status(HttpStatus.OK).send({
         statusCode: HttpStatus.OK,
@@ -127,7 +129,10 @@ export class SchoolService {
         },
       });
     } catch (error) {
-      throw new HttpException(error.response, error.status);
+      throw CustomError.customException(
+        error.response.message ? error.response.message : error.response,
+        error.response.statusCode ? error.response.statusCode : error.status,
+      );
     }
   }
 
@@ -149,7 +154,10 @@ export class SchoolService {
         data: school,
       });
     } catch (error) {
-      throw new HttpException(error.response, error.status);
+      throw CustomError.customException(
+        error.response.message ? error.response.message : error.response,
+        error.response.statusCode ? error.response.statusCode : error.status,
+      );
     }
   }
 
@@ -182,7 +190,10 @@ export class SchoolService {
           }
         });
       }
-      throw new HttpException(error.response, error.status);
+      throw CustomError.customException(
+        error.response.message ? error.response.message : error.response,
+        error.response.statusCode ? error.response.statusCode : error.status,
+      );
     }
   }
 }

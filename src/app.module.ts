@@ -10,6 +10,8 @@ import { SchoolSchema } from './school/schema/school.schema';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { StudentModule } from './student/student.module';
+import { StudentSchema } from './student/schema/student.schema';
+import 'dotenv/config';
 
 @Module({
   imports: [
@@ -23,10 +25,11 @@ import { StudentModule } from './student/student.module';
         },
       },
     }),
-    MongooseModule.forRoot('mongodb://localhost/school-management'),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
       { name: 'School', schema: SchoolSchema },
+      { name: 'Student', schema: StudentSchema },
     ]),
     AuthModule,
     SchoolModule,

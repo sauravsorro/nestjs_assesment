@@ -8,8 +8,8 @@ export const CustomError = {
     return new HttpException(
       {
         message: message || 'Internal Server Error',
-        error: error,
         statusCode: error,
+        data: {},
       },
       error,
     );

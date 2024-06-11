@@ -12,9 +12,4 @@ export class LoginUserDto {
   @IsNotEmpty()
   @IsString()
   password: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  role: string;
 }

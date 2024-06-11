@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateSchoolDto {
@@ -19,8 +19,6 @@ export class CreateSchoolDto {
   address: string;
 
   @ApiProperty({ type: 'file', required: true, format: 'binary' })
-  @IsString()
-  @IsNotEmpty()
   photo: string;
 
   @ApiProperty()
@@ -56,8 +54,6 @@ export class UpdateSchoolDto {
   address: string;
 
   @ApiProperty({ type: 'file', required: true, format: 'binary' })
-  @IsString()
-  @IsNotEmpty()
   photo: string;
 
   @ApiProperty()
@@ -79,4 +75,32 @@ export class UpdateSchoolDto {
   @IsString()
   @IsNotEmpty()
   country: string;
+}
+
+export class ListSchoolsDto {
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'Page number for pagination',
+    default: 1,
+  })
+  page?: number = 1;
+
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'Number of items per page',
+    default: 10,
+  })
+  limit?: number = 10;
+
+  @ApiPropertyOptional({ type: String, description: 'Search term' })
+  search?: string = '';
+
+  @ApiPropertyOptional({ type: String, description: 'Field to sort by' })
+  sortBy?: string = '';
+
+  @ApiPropertyOptional({ type: String, description: 'Sort order (asc/desc)' })
+  sortOrder?: string = '';
+
+  @ApiPropertyOptional({ type: String, description: 'City name' })
+  city?: string = '';
 }

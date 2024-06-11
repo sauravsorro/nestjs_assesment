@@ -4,6 +4,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,15 +16,21 @@ import {
 } from '@nestjs/common';
 import { SchoolService } from './school.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extname } from 'path';
-import { CreateSchoolDto, UpdateSchoolDto } from './dto/school.dto';
-import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
+import {
+  CreateSchoolDto,
+  ListSchoolsDto,
+  UpdateSchoolDto,
+} from './dto/school.dto';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import {
+  imageFileFilter,
+  storageConfig,
+} from 'src/common/UploadFile/file-upload';
 
-@Controller('school')
-@ApiTags('School')
 @ApiBearerAuth()
+@ApiTags('School')
+@Controller('school')
 export class SchoolController {
   constructor(private readonly schoolService: SchoolService) {}
 
@@ -30,16 +38,9 @@ export class SchoolController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('photo', {
-      storage: diskStorage({
-        destination: './uploads/school',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: storageConfig('./uploads/school'),
+      fileFilter: imageFileFilter,
+      limits: { fileSize: 1024 * 1024 * 2 }, // 2MB limit
     }),
   )
   create(
@@ -47,57 +48,22 @@ export class SchoolController {
     @UploadedFile() photo: any,
     @Res() res: Response,
   ) {
+    if (!photo) {
+      throw new HttpException('Photo is required', HttpStatus.BAD_REQUEST);
+    }
     body.photo = photo.filename;
     return this.schoolService.create(body, res);
   }
 
   @Get('/list')
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'sortOrder',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'city',
-    required: false,
-    type: String,
-  })
-  listSchools(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('search') search: string = '',
-    @Query('sortBy') sortBy: string = '',
-    @Query('sortOrder') sortOrder: string = '',
-    @Query('city') city: string = '',
-    @Res() res: Response,
-  ) {
+  listSchools(@Query() query: ListSchoolsDto, @Res() res: Response) {
     return this.schoolService.listSchools(
-      page,
-      limit,
-      search,
-      sortBy,
-      sortOrder,
-      city,
+      query.page,
+      query.limit,
+      query.search,
+      query.sortBy,
+      query.sortOrder,
+      query.city,
       res,
     );
   }
@@ -111,16 +77,9 @@ export class SchoolController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('photo', {
-      storage: diskStorage({
-        destination: './uploads/school',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: storageConfig('./uploads/school'),
+      fileFilter: imageFileFilter,
+      limits: { fileSize: 1024 * 1024 * 2 }, // 2MB limit
     }),
   )
   update(
@@ -129,6 +88,9 @@ export class SchoolController {
     @Body() body: UpdateSchoolDto,
     @Res() res: Response,
   ) {
+    if (!photo) {
+      throw new HttpException('Photo is required', HttpStatus.BAD_REQUEST);
+    }
     body.photo = photo.filename;
     return this.schoolService.updateSchool(id, body, res);
   }

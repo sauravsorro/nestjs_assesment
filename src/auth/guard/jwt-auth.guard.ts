@@ -1,22 +1,13 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { ExtractJwt } from 'passport-jwt';
-import { JwtService } from '@nestjs/jwt';
 import { AuthExceptions } from 'src/common/expections';
 import { AUTH_IS_PUBLIC_KEY } from 'src/utils/constants';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(
-    private reflector: Reflector,
-    private jwtService: JwtService,
-  ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: 'secret_key',
-    });
+  constructor(private reflector: Reflector) {
+    super();
   }
 
   canActivate(context: ExecutionContext) {
@@ -27,12 +18,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (isPublic) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
-    const token = request?.headers?.authorization?.split(' ')[1];
-    const user = this.jwtService.decode(token) as any;
-    if (user) {
-      return true;
-    }
+    return super.canActivate(context);
   }
 
   handleRequest(err, user, info) {
@@ -45,9 +31,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     if (err || !user) {
-      console.log('40 err is::::::::::::::::::', err);
-      console.log('40 user is::::::::::::::::::', user);
-
       throw err || AuthExceptions.ForbiddenException();
     }
 
