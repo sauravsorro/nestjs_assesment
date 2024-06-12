@@ -24,7 +24,7 @@ export class AuthService implements OnModuleInit {
   async onModuleInit() {
     await this.seedAdminUser();
   }
-
+  //------------Create a initial admin-----------
   private async seedAdminUser() {
     const adminUser = await this.userModel.findOne({
       email: 'admin@yopmail.com',
@@ -39,6 +39,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
+  //---------admin login---------
   async login(loginUserDto: LoginUserDto, res: Response) {
     try {
       const findAdminEmailExit = await this.userModel.findOne({
@@ -53,6 +54,7 @@ export class AuthService implements OnModuleInit {
         throw new HttpException('InValid Password', HttpStatus.BAD_REQUEST);
       }
 
+      //Generate authToken
       const tokenPayload = {
         _id: findAdminEmailExit._id,
         email: findAdminEmailExit.email,

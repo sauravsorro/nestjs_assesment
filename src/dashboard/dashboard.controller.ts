@@ -9,7 +9,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
   @Get('/count')
-  count(@Res() res: Response) {
+  countSchoolStudent(@Res() res: Response) {
     return this.dashboardService.getSchoolStudentCount(res);
   }
 

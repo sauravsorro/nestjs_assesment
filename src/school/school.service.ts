@@ -19,6 +19,7 @@ export class SchoolService {
     private readonly mailerService: MailerService,
   ) {}
 
+  //----------send password to email----------
   async sendPasswordEmail(email: string, password: string) {
     try {
       await this.mailerService.sendMail({
@@ -31,7 +32,8 @@ export class SchoolService {
     }
   }
 
-  async create(body: CreateSchoolDto, res: Response) {
+  //----------Create School----------
+  async createSchool(body: CreateSchoolDto, res: Response) {
     try {
       const emailExist = await this.schoolModel.findOne({
         email: body.email.toLowerCase(),
@@ -42,13 +44,17 @@ export class SchoolService {
           HttpStatus.BAD_REQUEST,
         );
       }
+
+      //generate password
       const password = await generatePassword();
       const hashedPassword = await bcrypt.hash(password, 10);
+
       const createdSchool = await this.schoolModel.create({
         ...body,
         email: body.email.toLowerCase(),
         password: hashedPassword,
       });
+
       const responseSchool = createdSchool.toObject();
       delete responseSchool.password;
 
@@ -78,6 +84,7 @@ export class SchoolService {
     }
   }
 
+  //-----------school list with queries----------
   async listSchools(
     page: number,
     limit: number,
@@ -136,6 +143,7 @@ export class SchoolService {
     }
   }
 
+  //-----------find school details----------------
   async findSchoolDetails(id: string, res: Response) {
     try {
       if (!idInvalid(id)) {
@@ -161,6 +169,7 @@ export class SchoolService {
     }
   }
 
+  //-----------update school details----------------
   async updateSchool(id: string, body: UpdateSchoolDto, res: Response) {
     try {
       if (!idInvalid(id)) {
@@ -170,10 +179,20 @@ export class SchoolService {
       if (!school) {
         throw new HttpException('School not found', HttpStatus.NOT_FOUND);
       }
+      const oldPhotoPath = school.photo;
       const update = await this.schoolModel
         .findByIdAndUpdate(id, body, { new: true })
         .select('-password')
         .exec();
+
+      //old image removed when new image update
+      if (body.photo && oldPhotoPath) {
+        fs.unlink(`./uploads/school/${oldPhotoPath}`, (err) => {
+          if (err) {
+            console.error('Error deleting old photo:', err);
+          }
+        });
+      }
       return res.status(HttpStatus.CREATED).send({
         statusCode: HttpStatus.CREATED,
         message: 'School Update Successfully',

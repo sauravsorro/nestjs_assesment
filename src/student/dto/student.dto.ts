@@ -8,7 +8,7 @@ import {
   Length,
 } from 'class-validator';
 
-export class CreateStudentDto {
+export class StudentDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -38,45 +38,6 @@ export class CreateStudentDto {
   @ApiProperty({ description: 'Format should be yyyy-mm-dd' })
   @IsNotEmpty()
   @IsString()
-  dob: string;
-
-  @ApiProperty({ description: 'Std should be between 1 to 10' })
-  @IsIn(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], {
-    message: 'Please enter between 1 to 10 std',
-  })
-  std: string;
-}
-
-export class UpdateStudentDto {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-
-  @ApiProperty({ type: 'file', required: true, format: 'binary' })
-  photo: string;
-
-  @ApiProperty()
-  @IsMongoId()
-  @IsNotEmpty()
-  schoolId: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsNumberString()
-  @Length(10, 10, {
-    message: 'Phone number must be 10 characters',
-  })
-  parentsNumber: string;
-
-  @ApiProperty({ description: 'Format should be yyyy-mm-dd' })
-  @IsString()
-  @IsNotEmpty()
   dob: string;
 
   @ApiProperty({ description: 'Std should be between 1 to 10' })
@@ -101,7 +62,7 @@ export class ListStudentsDto {
   })
   limit?: number = 10;
 
-  @ApiPropertyOptional({ type: String, description: 'Search term' })
+  @ApiPropertyOptional({ type: String, description: 'Search by name' })
   search?: string = '';
 
   @ApiPropertyOptional({ type: String, description: 'Field to sort by' })

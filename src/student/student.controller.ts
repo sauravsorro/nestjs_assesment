@@ -16,11 +16,7 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { StudentService } from './student.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  CreateStudentDto,
-  ListStudentsDto,
-  UpdateStudentDto,
-} from './dto/student.dto';
+import { ListStudentsDto, StudentDto } from './dto/student.dto';
 import { Response } from 'express';
 import {
   imageFileFilter,
@@ -29,7 +25,7 @@ import {
 
 @ApiBearerAuth()
 @ApiTags('Student')
-@Controller('student')
+@Controller('student-management')
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
@@ -43,7 +39,7 @@ export class StudentController {
     }),
   )
   create(
-    @Body() body: CreateStudentDto,
+    @Body() body: StudentDto,
     @UploadedFile() photo: any,
     @Res() res: Response,
   ) {
@@ -51,10 +47,10 @@ export class StudentController {
       throw new HttpException('Photo is required', HttpStatus.BAD_REQUEST);
     }
     body.photo = photo.filename;
-    return this.studentService.create(body, res);
+    return this.studentService.createStudent(body, res);
   }
 
-  @Get('/list')
+  @Get('/studentList')
   listStudents(@Query() query: ListStudentsDto, @Res() res: Response) {
     return this.studentService.listStudents(
       query.page,
@@ -67,12 +63,12 @@ export class StudentController {
     );
   }
 
-  @Get(':id')
+  @Get('viewStudent/:id')
   viewStudent(@Param('id') id: string, @Res() res: Response) {
     return this.studentService.findStudentDetails(id, res);
   }
 
-  @Patch('update/:id')
+  @Patch('updateStudent/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('photo', {
@@ -84,7 +80,7 @@ export class StudentController {
   update(
     @Param('id') id: string,
     @UploadedFile() photo: any,
-    @Body() body: UpdateStudentDto,
+    @Body() body: StudentDto,
     @Res() res: Response,
   ) {
     if (!photo) {
@@ -94,12 +90,12 @@ export class StudentController {
     return this.studentService.updateStudent(id, body, res);
   }
 
-  @Patch('activeInActive/:id')
+  @Patch('activeInActiveStudent/:id')
   toggleActive(@Param('id') id: string, @Res() res: Response) {
     return this.studentService.toggleActive(id, res);
   }
 
-  @Delete(':id')
+  @Delete('deleteStudent/:id')
   remove(@Param('id') id: string, @Res() res: Response) {
     return this.studentService.deleteStudent(id, res);
   }

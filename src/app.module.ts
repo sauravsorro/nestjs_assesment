@@ -17,11 +17,11 @@ import 'dotenv/config';
   imports: [
     MailerModule.forRoot({
       transport: {
-        host: 'smtp.gmail.com',
+        host: process.env.MAIL_SERVICE_HOST,
         port: 587,
         auth: {
-          user: 'agileinfoways02@gmail.com',
-          pass: 'vlhqwglsdeksidey',
+          user: process.env.MAIL_SERVICE_USER,
+          pass: process.env.MAIL_SERVICE_PASSWORD,
         },
       },
     }),

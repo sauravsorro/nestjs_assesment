@@ -2,12 +2,12 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Student, StudentDocument } from './schema/student.schema';
 import { Model } from 'mongoose';
-import { CreateStudentDto, UpdateStudentDto } from './dto/student.dto';
 import { Response } from 'express';
 import * as fs from 'fs';
 import { School, SchoolDocument } from 'src/school/schema/school.schema';
 import { idInvalid, isValidDateFormat } from 'src/utils/constants';
 import { CustomError } from 'src/common/expections';
+import { StudentDto } from './dto/student.dto';
 
 @Injectable()
 export class StudentService {
@@ -16,7 +16,8 @@ export class StudentService {
     @InjectModel(School.name) private schoolModel: Model<SchoolDocument>,
   ) {}
 
-  async create(body: CreateStudentDto, res: Response) {
+  //--------------Create student----------------
+  async createStudent(body: StudentDto, res: Response) {
     try {
       if (!idInvalid(body.schoolId)) {
         throw new HttpException('Invalid SchoolId', HttpStatus.BAD_REQUEST);
@@ -61,6 +62,7 @@ export class StudentService {
     }
   }
 
+  //------------student list with queries---------
   async listStudents(
     page: number,
     limit: number,
@@ -122,6 +124,7 @@ export class StudentService {
     }
   }
 
+  //-------------find student details-------------
   async findStudentDetails(id: string, res: Response) {
     try {
       if (!idInvalid(id)) {
@@ -144,7 +147,8 @@ export class StudentService {
     }
   }
 
-  async updateStudent(id: string, body: UpdateStudentDto, res: Response) {
+  //--------update student details----------------
+  async updateStudent(id: string, body: StudentDto, res: Response) {
     try {
       if (!idInvalid(id)) {
         throw new HttpException('Invalid Id', HttpStatus.BAD_REQUEST);
@@ -153,6 +157,8 @@ export class StudentService {
       if (!student) {
         throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
       }
+      const oldPhotoPath = student.photo;
+
       const schoolIdExist = await this.schoolModel.find({ _id: body.schoolId });
       if (!schoolIdExist) {
         throw new HttpException(
@@ -160,9 +166,25 @@ export class StudentService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      // Check if date of birth is in 'yyyy-mm-dd' format
+      if (!isValidDateFormat(body.dob)) {
+        throw new HttpException(
+          'Invalid Date of Birth or Invalid Format of Date of Birth, format should be yyyy-mm-dd',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const update = await this.studentModel
         .findByIdAndUpdate(id, body, { new: true })
         .exec();
+
+      //old image removed when new image update
+      if (body.photo && oldPhotoPath) {
+        fs.unlink(`./uploads/student/${oldPhotoPath}`, (err) => {
+          if (err) {
+            console.error('Error deleting old photo:', err);
+          }
+        });
+      }
       return res.status(HttpStatus.CREATED).send({
         statusCode: HttpStatus.CREATED,
         message: 'Student Update Successfully',
@@ -186,6 +208,7 @@ export class StudentService {
     }
   }
 
+  //---------active and inactive student-----------
   async toggleActive(id: string, res: Response) {
     try {
       if (!idInvalid(id)) {
@@ -214,6 +237,7 @@ export class StudentService {
     }
   }
 
+  //-----------student delete--------------
   async deleteStudent(id: string, res: Response) {
     try {
       if (!idInvalid(id)) {
@@ -223,7 +247,18 @@ export class StudentService {
       if (!student) {
         throw new HttpException('Student not found', HttpStatus.BAD_GATEWAY);
       }
+      const deletePhotoPath = student.photo;
+
       await this.studentModel.findByIdAndDelete(id).exec();
+
+      //delete image from folder
+      if (deletePhotoPath) {
+        fs.unlink(`./uploads/student/${deletePhotoPath}`, (err) => {
+          if (err) {
+            console.error('Error deleting old photo:', err);
+          }
+        });
+      }
       return res.status(HttpStatus.OK).send({
         statusCode: HttpStatus.OK,
         message: 'Student Delete Successfully',

@@ -30,7 +30,7 @@ import {
 
 @ApiBearerAuth()
 @ApiTags('School')
-@Controller('school')
+@Controller('school-management')
 export class SchoolController {
   constructor(private readonly schoolService: SchoolService) {}
 
@@ -52,10 +52,10 @@ export class SchoolController {
       throw new HttpException('Photo is required', HttpStatus.BAD_REQUEST);
     }
     body.photo = photo.filename;
-    return this.schoolService.create(body, res);
+    return this.schoolService.createSchool(body, res);
   }
 
-  @Get('/list')
+  @Get('/listSchool')
   listSchools(@Query() query: ListSchoolsDto, @Res() res: Response) {
     return this.schoolService.listSchools(
       query.page,
@@ -68,12 +68,12 @@ export class SchoolController {
     );
   }
 
-  @Get(':id')
+  @Get('viewSchool/:id')
   viewSchool(@Param('id') id: string, @Res() res: Response) {
     return this.schoolService.findSchoolDetails(id, res);
   }
 
-  @Patch('update/:id')
+  @Patch('updateSchool/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('photo', {

@@ -92,7 +92,10 @@ export class ListSchoolsDto {
   })
   limit?: number = 10;
 
-  @ApiPropertyOptional({ type: String, description: 'Search term' })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Search by name and email',
+  })
   search?: string = '';
 
   @ApiPropertyOptional({ type: String, description: 'Field to sort by' })

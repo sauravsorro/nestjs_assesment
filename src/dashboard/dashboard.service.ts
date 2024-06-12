@@ -13,6 +13,7 @@ export class DashboardService {
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
   ) {}
 
+  //---------Get count of student and school--------------
   async getSchoolStudentCount(res: Response) {
     try {
       const [countSchool, countStudent] = await Promise.all([
@@ -32,6 +33,7 @@ export class DashboardService {
     }
   }
 
+  //---------Get count of students school wise--------------
   async getStudentCountsBySchool(res: Response) {
     try {
       const countData = await this.schoolModel.aggregate([
