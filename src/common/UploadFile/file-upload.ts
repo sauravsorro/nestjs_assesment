@@ -14,14 +14,6 @@ export const imageFileFilter = (
       false,
     );
   }
-
-  if (file.size > 1024 * 1024 * 2) {
-    return callback(
-      new HttpException('File size limit exceeded', HttpStatus.BAD_REQUEST),
-      false,
-    );
-  }
-
   callback(null, true);
 };
 
